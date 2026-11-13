@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>License Plate Bingo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e6ecf0; --paper:#ffffff; --soft:#d7e0e6; --ink:#101418; --text:#101418; --muted:#56626e;
+  --sign:#14834f; --amber:#ffbf1f; --red:#e5443a; --blue:#2f6df6;
+  --edge:3px solid var(--ink); --drop:0 5px 0 var(--ink); --drop-sm:0 3px 0 var(--ink);
+  --font:"Archivo",system-ui,-apple-system,sans-serif;
+  --dash:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect x='4' y='30' width='26' height='4' rx='2' fill='%23101418' fill-opacity='.06'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#14171b; --paper:#20252b; --soft:#2b3239; --ink:#050607; --text:#eef2f5; --muted:#9aa6b2;
+  --dash:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect x='4' y='30' width='26' height='4' rx='2' fill='%23ffbf1f' fill-opacity='.07'/%3E%3C/svg%3E");
+  color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font:500 16px/1.35 var(--font);-webkit-font-smoothing:antialiased;min-height:100vh;background-image:var(--dash)}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.wrap{max-width:620px;margin:0 auto;padding:22px 16px 48px}
+
+/* ---------- Highway-sign header ---------- */
+.signpost{display:flex;flex-direction:column;align-items:flex-start;margin-bottom:6px}
+.exit{background:var(--amber);color:#101418;border:var(--edge);border-bottom:0;border-radius:9px 9px 0 0;
+  padding:3px 12px 2px;margin-left:18px;font-weight:900;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-stretch:110%}
+.sign{background:var(--sign);border:var(--edge);border-radius:14px;box-shadow:0 6px 0 var(--ink);padding:5px;width:100%}
+.sign-in{border:3px solid #fff;border-radius:9px;padding:10px 14px 12px;color:#fff;display:flex;align-items:center;gap:14px}
+.sign-text{flex:1;min-width:0}
+.sign-top{display:block;font-weight:700;font-size:clamp(13px,3.6vw,17px);letter-spacing:.14em;text-transform:uppercase;font-stretch:115%;opacity:.95}
+.sign-main{display:block;font-weight:900;font-size:clamp(40px,12vw,64px);line-height:.9;letter-spacing:.02em;font-stretch:125%}
+.arrow{flex:none;width:clamp(44px,12vw,64px);height:clamp(44px,12vw,64px)}
+.sub{color:var(--muted);margin:16px 2px 18px;font-size:15px;font-weight:600}
+
+/* ---------- Controls ---------- */
+.panel{background:var(--paper);border:var(--edge);border-radius:14px;box-shadow:var(--drop);padding:12px;display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.seg button{padding:10px 4px 9px;border-radius:10px;border:var(--edge);background:var(--soft);box-shadow:var(--drop-sm);
+  font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:.06em;font-stretch:110%;transition:transform .08s,box-shadow .08s}
+.seg button small{display:block;font-size:10px;font-weight:700;letter-spacing:.03em;white-space:nowrap;font-stretch:85%;opacity:.75;margin-top:1px}
+.seg button[aria-pressed="true"]{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.seg button[data-d="easy"][aria-pressed="true"]{background:var(--sign);color:#fff}
+.seg button[data-d="medium"][aria-pressed="true"]{background:var(--amber);color:#101418}
+.seg button[data-d="hard"][aria-pressed="true"]{background:var(--red);color:#fff}
+.toggle{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:800;user-select:none}
+.toggle input{display:none}
+.switch{width:52px;height:30px;border-radius:8px;background:var(--soft);border:var(--edge);position:relative;transition:.15s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:4px;background:var(--paper);border:2.5px solid var(--ink);transition:.15s}
+.toggle input:checked + .switch{background:var(--blue)}
+.toggle input:checked + .switch::after{left:23px;background:#fff}
+.btns{display:flex;gap:8px}
+.btn{padding:11px 16px 10px;border-radius:10px;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.06em;font-stretch:110%;
+  background:var(--paper);border:var(--edge);box-shadow:var(--drop-sm);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.btn.go{background:var(--blue);color:#fff}
+.btn.danger{background:var(--red);color:#fff}
+
+/* ---------- Status ---------- */
+.status{display:flex;align-items:center;gap:12px;margin:0 2px 12px;flex-wrap:wrap}
+.count{font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:.05em;font-stretch:110%;white-space:nowrap}
+.road{flex:1;min-width:120px;height:16px;border:var(--edge);border-radius:999px;background:#2a2f35;position:relative;overflow:hidden}
+.road::before{content:"";position:absolute;left:6px;right:6px;top:50%;height:2px;margin-top:-1px;
+  background:repeating-linear-gradient(90deg,var(--amber) 0 10px,transparent 10px 18px);opacity:.8}
+.fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--amber);transition:width .3s}
+.legend{display:flex;gap:12px;font-size:12px;font-weight:700;color:var(--muted);width:100%}
+.chip{display:inline-block;width:18px;height:10px;border-radius:3px;border:2px solid var(--ink);margin-right:5px;vertical-align:-1px}
+
+/* ---------- Board ---------- */
+.card{background:var(--paper);border:var(--edge);border-radius:16px;box-shadow:var(--drop);padding:10px}
+.letters,.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.letters{margin-bottom:9px}
+.letters div{background:#101418;color:var(--amber);border-radius:8px;text-align:center;font-weight:900;font-size:clamp(20px,5.6vw,30px);
+  font-stretch:125%;padding:3px 0 4px;line-height:1.1;box-shadow:0 3px 0 var(--amber) inset}
+
+.plate{position:relative;min-width:0;aspect-ratio:1/0.9;border-radius:9px;cursor:pointer;background:#fff;color:#101418;
+  border:var(--edge);box-shadow:0 4px 0 var(--ink);display:flex;flex-direction:column;overflow:hidden;
+  transition:transform .08s,box-shadow .08s,background .15s;user-select:none}
+.plate:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.band{flex:none;height:30%;display:flex;align-items:center;justify-content:center;padding:0 9px;border-bottom:2.5px solid #101418;
+  font-weight:800;font-size:clamp(6px,1.65vw,10.5px);letter-spacing:.04em;text-transform:uppercase;font-stretch:72%;white-space:nowrap;overflow:hidden;position:relative}
+.band::before,.band::after{content:"";position:absolute;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:#101418;opacity:.45}
+.band::before{left:3px}.band::after{right:3px}
+.band.long{font-size:clamp(5.5px,1.45vw,9.5px);letter-spacing:0;font-stretch:62%}
+.band.common{background:var(--sign);color:#fff}
+.band.uncommon{background:var(--amber);color:#101418}
+.band.rare{background:var(--red);color:#fff}
+.body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 2px 2px;transition:opacity .15s}
+.abbr{font-weight:900;font-size:clamp(19px,6.2vw,36px);line-height:.95;font-stretch:80%;letter-spacing:.03em}
+.regs{font-size:clamp(7px,1.7vw,11px);font-weight:700;color:#56626e;margin-top:2px;font-variant-numeric:tabular-nums;font-stretch:90%}
+.stamp{position:absolute;left:50%;top:83%;transform:translate(-50%,-50%) rotate(-8deg) scale(1.7);opacity:0;pointer-events:none;
+  border:2.5px solid var(--red);color:var(--red);border-radius:6px;padding:1px 4px 0;background:rgba(255,255,255,.85);
+  font-weight:900;font-size:clamp(7px,1.9vw,12px);letter-spacing:.08em;font-stretch:90%;transition:.16s cubic-bezier(.3,1.5,.6,1)}
+.plate.marked .body{opacity:.9}
+.plate.marked .stamp{opacity:1;transform:translate(-50%,-50%) rotate(-8deg) scale(1)}
+.plate.marked{background:#fff6dc}
+.plate.marked .abbr{color:#8a2a22}
+.plate.marked .regs{opacity:0}
+.plate.win{background:#fff1c2}
+.plate.win .body{opacity:1}
+.plate.win .abbr{color:#101418}
+.plate.free{background:#101418;color:var(--amber);cursor:default}
+.plate.free:active{transform:none;box-shadow:0 4px 0 var(--ink)}
+.plate.free .band{background:#101418;color:#fff;border-bottom-color:var(--amber)}
+.plate.free .band::before,.plate.free .band::after{background:#fff}
+.plate.free .regs{color:#fff;opacity:.7}
+.plate.free .abbr{font-size:clamp(15px,4.6vw,27px);font-stretch:75%}
+.plate.free.win .abbr{color:var(--amber)}
+.plate.free.win{background:#101418;box-shadow:0 4px 0 var(--ink), inset 0 0 0 3px var(--amber)}
+
+/* ---------- Bingo sign ---------- */
+.banner{display:none;margin-top:20px;background:var(--sign);border:var(--edge);border-radius:14px;box-shadow:0 6px 0 var(--ink);padding:5px;animation:drop .35s cubic-bezier(.3,1.4,.6,1)}
+.banner.show{display:block}
+.banner-in{border:3px solid #fff;border-radius:9px;color:#fff;text-align:center;padding:10px}
+.banner b{display:block;font-size:clamp(30px,9vw,44px);font-weight:900;font-stretch:125%;line-height:1}
+.banner small{display:block;margin-top:4px;font-size:14px;font-weight:600}
+@keyframes drop{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+.note{color:var(--muted);font-size:13px;font-weight:500;text-align:center;margin-top:22px;line-height:1.55}
+.note b{color:var(--text)}
+
+/* ---------- Confirm dialog ---------- */
+.scrim{position:fixed;inset:0;background:rgba(10,12,15,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+.scrim.show{display:flex}
+.dialog{width:min(380px,100%);background:var(--paper);color:var(--text);border:var(--edge);border-radius:16px;box-shadow:0 8px 0 var(--ink);overflow:hidden;animation:drop .25s ease}
+.dialog-head{background:var(--amber);color:#101418;border-bottom:var(--edge);padding:10px 16px;display:flex;align-items:center;gap:10px;
+  font-weight:900;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-stretch:115%}
+.diamond{width:20px;height:20px;border:2.5px solid #101418;transform:rotate(45deg);display:grid;place-items:center;border-radius:3px;flex:none}
+.diamond span{transform:rotate(-45deg);font-size:12px;font-weight:900}
+.dialog-body{padding:16px}
+.dialog h2{margin:0 0 6px;font-size:22px;font-weight:900;font-stretch:110%;line-height:1.15}
+.dialog p{margin:0;color:var(--muted);font-weight:500}
+.dialog .btns{margin-top:16px}
+.dialog .btns .btn{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="signpost">
+    <div class="exit">Exit 50 · All States</div>
+    <div class="sign"><div class="sign-in">
+      <div class="sign-text"><span class="sign-top">License Plate</span><span class="sign-main">BINGO</span></div>
+      <svg class="arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M14 38V22c0-4 3-7 7-7h10" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M28 6l11 9-11 9z" fill="#fff"/></svg>
+    </div></div>
+  </header>
+  <p class="sub">Spot a plate on the road, tap its square. Five in a row wins.</p>
+
+  <div class="panel">
+    <div class="seg" id="diff">
+      <button data-d="easy" aria-pressed="true">Easy<small>Common plates</small></button>
+      <button data-d="medium" aria-pressed="false">Medium<small>All 50</small></button>
+      <button data-d="hard" aria-pressed="false">Hard<small>Rare plates</small></button>
+    </div>
+    <div class="row">
+      <label class="toggle"><input type="checkbox" id="free" checked><span class="switch"></span>Free space</label>
+      <div class="btns">
+        <button class="btn" id="clear">Clear</button>
+        <button class="btn go" id="newcard">New card</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status">
+    <span class="count">Spotted <span id="count">0</span>/<span id="total">24</span></span>
+    <div class="road" aria-hidden="true"><div class="fill" id="fill"></div></div>
+    <div class="legend">
+      <span><span class="chip" style="background:var(--sign)"></span>Common</span>
+      <span><span class="chip" style="background:var(--amber)"></span>Uncommon</span>
+      <span><span class="chip" style="background:var(--red)"></span>Rare</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="letters"><div>B</div><div>I</div><div>N</div><div>G</div><div>O</div></div>
+    <div class="board" id="board"></div>
+  </div>
+  <div class="banner" id="banner"><div class="banner-in"><b id="bannerTitle">BINGO!</b><small id="bannerSub"></small></div></div>
+
+  <p class="note">
+    <b>Easy</b> uses the 30 states with the most registered vehicles ·
+    <b>Medium</b> uses all 50 · <b>Hard</b> uses the 30 with the fewest.<br>
+    Each plate shows the state's registered vehicles; the top color shows how rare it is.
+  </p>
+</div>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <div class="dialog">
+    <div class="dialog-head"><span class="diamond"><span>!</span></span>Hold up</div>
+    <div class="dialog-body">
+      <h2 id="dlgTitle">Start a new card?</h2>
+      <p id="dlgText"></p>
+      <div class="btns">
+        <button class="btn" id="dlgCancel">Cancel</button>
+        <button class="btn danger" id="dlgOk">New card</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATES = [
+  ["Delaware","DE",447094],["Vermont","VT",671376],["Alaska","AK",683022],["Rhode Island","RI",838866],
+  ["Wyoming","WY",877152],["North Dakota","ND",1076690],["Maine","ME",1206967],["Hawaii","HI",1270153],
+  ["New Hampshire","NH",1390610],["South Dakota","SD",1406923],["West Virginia","WV",1479130],
+  ["New Mexico","NM",1930353],["Nebraska","NE",1989172],["Kansas","KS",2007586],["Idaho","ID",2030069],
+  ["Mississippi","MS",2214249],["Nevada","NV",2388916],["Montana","MT",2473269],["Connecticut","CT",2809456],
+  ["Utah","UT",3207140],["Arkansas","AR",3366650],["Oklahoma","OK",3707717],["Iowa","IA",3856647],
+  ["Oregon","OR",4254488],["Louisiana","LA",4556436],["Kentucky","KY",4561539],["Maryland","MD",4965605],
+  ["South Carolina","SC",5065151],["Massachusetts","MA",5094689],["Colorado","CO",5276703],
+  ["Missouri","MO",5422419],["Alabama","AL",5655344],["Wisconsin","WI",5836776],["Minnesota","MN",5937412],
+  ["Indiana","IN",6100731],["New Jersey","NJ",6256097],["Arizona","AZ",6692631],["Tennessee","TN",7175641],
+  ["Washington","WA",7519050],["Virginia","VA",7985530],["North Carolina","NC",8862420],["Georgia","GA",9309408],
+  ["Michigan","MI",9606801],["Illinois","IL",10546027],["Pennsylvania","PA",10612158],["Ohio","OH",11366695],
+  ["Florida","FL",19696080],["New York","NY",20991098],["Texas","TX",23606401],["California","CA",30940652]
+].map(([name,abbr,regs])=>({name,abbr,regs})); // sorted rarest -> most common
+const BY_ABBR = Object.fromEntries(STATES.map(s=>[s.abbr,s]));
+
+const POOLS = { easy:STATES.slice(-30), medium:STATES.slice(), hard:STATES.slice(0,30) };
+const LABEL = { easy:"Easy", medium:"Medium", hard:"Hard" };
+const LINES = [];
+for(let i=0;i<5;i++){ LINES.push([0,1,2,3,4].map(c=>i*5+c)); LINES.push([0,1,2,3,4].map(r=>r*5+i)); }
+LINES.push([0,6,12,18,24]); LINES.push([4,8,12,16,20]);
+
+const rarity = r => r < 2000000 ? "rare" : r < 6000000 ? "uncommon" : "common";
+const fmt = n => n.toLocaleString("en-US");
+const short = n => n>=1e6 ? (n/1e6).toFixed(n>=1e7?0:1).replace(/\.0$/,"")+"M" : Math.round(n/1e3)+"K";
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+let state = { diff:"easy", free:true, cells:[], marked:[] };
+
+function save(){ try{ localStorage.setItem("plateBingo", JSON.stringify(state)); }catch(e){} }
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem("plateBingo"));
+    if(s && Array.isArray(s.cells) && s.cells.length===25 && POOLS[s.diff]){ state = s; return true; }
+  }catch(e){}
+  return false;
+}
+const spotted = () => state.cells.filter((c,i)=>c!=="FREE" && state.marked[i]).length;
+
+function newCard(){
+  const need = state.free ? 24 : 25;
+  const cells = shuffle(POOLS[state.diff]).slice(0,need).map(s=>s.abbr);
+  if(state.free) cells.splice(12,0,"FREE");
+  state.cells = cells;
+  state.marked = cells.map(c=>c==="FREE");
+  save(); render();
+}
+
+/* ---------- confirm dialog ---------- */
+const scrim = document.getElementById("scrim");
+let pending = null;
+function ask({title, text, ok, onOk, onCancel}){
+  document.getElementById("dlgTitle").textContent = title;
+  document.getElementById("dlgText").textContent = text;
+  document.getElementById("dlgOk").textContent = ok;
+  pending = {onOk, onCancel};
+  scrim.classList.add("show");
+  document.getElementById("dlgCancel").focus();
+}
+function closeDlg(confirmed){
+  if(!pending) return;
+  const p = pending; pending = null;
+  scrim.classList.remove("show");
+  confirmed ? p.onOk && p.onOk() : p.onCancel && p.onCancel();
+}
+document.getElementById("dlgOk").onclick = ()=>closeDlg(true);
+document.getElementById("dlgCancel").onclick = ()=>closeDlg(false);
+scrim.addEventListener("click", e=>{ if(e.target===scrim) closeDlg(false); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeDlg(false); });
+
+// Run `action` right away if nothing is marked; otherwise ask first.
+function guard(opts, action, onCancel){
+  const n = spotted();
+  if(n===0){ action(); return; }
+  ask({ ...opts, text: opts.text.replace("{n}", n===1 ? "1 plate" : n+" plates"), onOk: action, onCancel });
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.querySelectorAll("#diff button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.d===state.diff));
+  document.getElementById("free").checked = state.free;
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  const wins = LINES.filter(l=>l.every(i=>state.marked[i]));
+  const winCells = new Set(wins.flat());
+
+  state.cells.forEach((abbr,i)=>{
+    const el = document.createElement("div");
+    el.className = "plate";
+    if(abbr==="FREE"){
+      el.classList.add("free");
+      el.innerHTML = `<div class="band">Free space</div><div class="body"><div class="abbr">FREE</div><div class="regs">rest stop</div></div>`;
+    } else {
+      const s = BY_ABBR[abbr];
+      if(state.marked[i]) el.classList.add("marked");
+      el.innerHTML = `<div class="band ${rarity(s.regs)}${s.name.length>11?" long":""}">${s.name}</div>
+        <div class="body"><div class="abbr">${s.abbr}</div><div class="regs">${short(s.regs)}</div></div>
+        <div class="stamp">SPOTTED</div>`;
+      el.setAttribute("role","button");
+      el.setAttribute("aria-pressed", !!state.marked[i]);
+      el.title = `${s.name}: ${fmt(s.regs)} registered vehicles`;
+      el.onclick = ()=>{ state.marked[i] = !state.marked[i]; save(); render(); };
+    }
+    if(winCells.has(i)) el.classList.add("win");
+    board.appendChild(el);
+  });
+
+  const total = state.cells.filter(c=>c!=="FREE").length, n = spotted();
+  document.getElementById("count").textContent = n;
+  document.getElementById("total").textContent = total;
+  document.getElementById("fill").style.width = (100*n/total)+"%";
+
+  const banner = document.getElementById("banner");
+  const full = state.marked.every(Boolean);
+  if(wins.length){
+    banner.classList.add("show");
+    document.getElementById("bannerTitle").textContent = full ? "BLACKOUT!" : wins.length>1 ? `BINGO ×${wins.length}!` : "BINGO!";
+    document.getElementById("bannerSub").textContent = full ? "You spotted every plate on the card." : "Keep going for a blackout, or start a new card.";
+  } else banner.classList.remove("show");
+}
+
+/* ---------- controls ---------- */
+document.getElementById("newcard").onclick = ()=> guard(
+  {title:"Start a new card?", text:"You've spotted {n} on this card. A new card will clear them.", ok:"New card"},
+  newCard);
+
+document.getElementById("clear").onclick = ()=> guard(
+  {title:"Clear your marks?", text:"This un-marks the {n} you've spotted. The card stays the same.", ok:"Clear"},
+  ()=>{ state.marked = state.cells.map(c=>c==="FREE"); save(); render(); });
+
+document.querySelectorAll("#diff button").forEach(b=>b.onclick=()=>{
+  if(b.dataset.d===state.diff) return;
+  guard({title:`Switch to ${LABEL[b.dataset.d]}?`, text:"You've spotted {n} on this card. Changing difficulty deals a new card.", ok:"New card"},
+    ()=>{ state.diff=b.dataset.d; newCard(); });
+});
+
+document.getElementById("free").onchange = e=>{
+  const want = e.target.checked;
+  guard({title: want ? "Add a free space?" : "Remove the free space?", text:"You've spotted {n} on this card. This deals a new card.", ok:"New card"},
+    ()=>{ state.free=want; newCard(); },
+    ()=>{ e.target.checked = !want; });
+};
+
+if(load()) render(); else newCard();
+</script>
+</body>
+</html>
